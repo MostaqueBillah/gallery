@@ -1,4 +1,3 @@
-// App.js
 import React from "react";
 import Title from "./comps/Title";
 // import Modal from "./comps/Modal";

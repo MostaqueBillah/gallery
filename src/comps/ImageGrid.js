@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from "react";
 import useFirestore from "../hooks/useFirestore";
-import { motion } from "framer-motion";
 import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
   const { docs: initialDocs } = useFirestore("images");
-  const [docs, setDocs] = useState(initialDocs);
+  const [docs, setDocs] = useState(() => {
+    const savedDocs = localStorage.getItem("reorderedImages");
+    return savedDocs ? JSON.parse(savedDocs) : initialDocs;
+  });
+  const [hasReordered, setHasReordered] = useState(false);
 
   useEffect(() => {
-    setDocs(initialDocs);
-  }, [initialDocs]);
+    const savedDocs = localStorage.getItem("reorderedImages");
+    if (savedDocs && !hasReordered) {
+      setDocs(JSON.parse(savedDocs));
+    } else if (!hasReordered) {
+      setDocs(initialDocs);
+    }
+  }, [initialDocs, hasReordered]);
 
   const handleImageClick = (url) => {
     setSelectedImg(url);
@@ -29,11 +37,17 @@ const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
   const handleOnDragEnd = (result) => {
     if (!result.destination) return;
 
-    const reorderedImages = Array.from(docs);
-    const [reorderedItem] = reorderedImages.splice(result.source.index, 1);
-    reorderedImages.splice(result.destination.index, 0, reorderedItem);
+    const items = Array.from(docs);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
 
-    setDocs([...reorderedImages]);
+    setDocs(items);
+    setHasReordered(true);
+
+    // Save the reordered items to local storage
+    localStorage.setItem("reorderedImages", JSON.stringify(items));
+
+    console.log(result);
   };
 
   return (
@@ -49,20 +63,13 @@ const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
               docs.map((doc, index) => (
                 <Draggable key={doc.id} draggableId={doc.id} index={index}>
                   {(provided, snapshot) => (
-                    <motion.div
-                      className={`img-wrap ${index === 0 ? "featured" : ""}`}
-                      key={doc.id}
-                      layout
-                      whileHover={{ opacity: 1 }}
+                    <div
+                      className={`img-wrap ${index === 0 ? "featured" : ""} ${
+                        snapshot.isDragging ? "dragging" : ""
+                      }`}
                       ref={provided.innerRef}
                       {...provided.draggableProps}
                       {...provided.dragHandleProps}
-                      style={{
-                        ...provided.draggableProps.style,
-                        transform: snapshot.isDragging
-                          ? "none"
-                          : provided.draggableProps.style.transform,
-                      }}
                     >
                       <input
                         type="checkbox"
@@ -70,15 +77,12 @@ const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
                         checked={selectedImages.includes(doc.id)}
                         onChange={(e) => toggleImageSelection(doc.id, e)}
                       />
-                      <motion.img
+                      <img
                         src={doc.url}
                         alt="uploaded pic"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 1 }}
                         onClick={() => handleImageClick(doc.url)}
                       />
-                    </motion.div>
+                    </div>
                   )}
                 </Draggable>
               ))}
@@ -91,4 +95,3 @@ const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
 };
 
 export default ImageGrid;
-
