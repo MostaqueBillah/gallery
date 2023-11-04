@@ -20,6 +20,7 @@ const useFirestore = (collectionName) => {
       setDocs(documents);
     });
 
+    // Cleanup function to unsubscribe from Firestore listener when component unmounts
     return () => unsub();
   }, [collectionName]);
 

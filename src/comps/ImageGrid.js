@@ -4,10 +4,8 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
   const { docs: initialDocs } = useFirestore("images");
-  const [docs, setDocs] = useState(() => {
-    const savedDocs = localStorage.getItem("reorderedImages");
-    return savedDocs ? JSON.parse(savedDocs) : initialDocs;
-  });
+  const [docs, setDocs] = useState(initialDocs);
+
   const [hasReordered, setHasReordered] = useState(false);
 
   useEffect(() => {
@@ -18,6 +16,10 @@ const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
       setDocs(initialDocs);
     }
   }, [initialDocs, hasReordered]);
+
+  useEffect(() => {
+    setDocs(initialDocs);
+  }, [initialDocs]);
 
   const handleImageClick = (url) => {
     setSelectedImg(url);
@@ -46,8 +48,6 @@ const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
 
     // Save the reordered items to local storage
     localStorage.setItem("reorderedImages", JSON.stringify(items));
-
-    console.log(result);
   };
 
   return (

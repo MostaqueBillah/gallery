@@ -19,7 +19,7 @@ const Gallery = () => {
     });
 
     await Promise.all(promises);
-    setSelectedImages([]); 
+    setSelectedImages([]); // Clear the selection after deleting.
   };
 
   return (
